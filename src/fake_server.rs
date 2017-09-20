@@ -15,10 +15,10 @@ fn handle_client(mut stream: TcpStream) {
     }
 }
 
-fn main() {
+pub fn spawn() {
     println!("Hello, world!");
-    let listener = TcpListener::bind("127.0.0.1:10024").unwrap();
-    println!("Listen at the 127.0.0.1:10024");
+    let listener = TcpListener::bind(::ADDRESS).unwrap();
+    println!("Listen at the {}", ::ADDRESS);
     for stream in listener.incoming() {
         handle_client(stream.unwrap());
     }
