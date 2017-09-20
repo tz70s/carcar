@@ -4,10 +4,15 @@
 use std::net::{TcpListener, TcpStream};
 use std::io::Read;
 
+static mut NUMBER_OF_RECEIVED : u32 = 0;
+
 fn handle_client(mut stream: TcpStream) {
     let mut buffer = String::new();
     let _ = stream.read_to_string(&mut buffer);
-    println!("read : {}", buffer);
+    unsafe {
+        NUMBER_OF_RECEIVED += 1;
+        println!("read {} : {}", NUMBER_OF_RECEIVED, buffer);
+    }
 }
 
 fn main() {

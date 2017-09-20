@@ -7,5 +7,5 @@ cd fake-listener
 cargo run
 # open another terminal
 cd tcp-stream
-cargo run
+cargo run [number_of_round] * [number_of_threads]
 ```

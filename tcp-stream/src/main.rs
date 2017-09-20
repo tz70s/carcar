@@ -5,6 +5,9 @@ extern crate rand;
 use std::io::prelude::*;
 use std::net::TcpStream;
 use rand::distributions::{IndependentSample, Range};
+use std::thread;
+use std::env;
+use std::process;
 
 // Payload of an Car information
 #[derive(Debug)]
@@ -39,9 +42,69 @@ impl CarPayload {
         format!("{:?}", self)
     }
 }
-fn main() {
-    println!("Hello, world!");
+
+// Generate data payload along with different threads
+fn send_a_car() {
     let mut stream = TcpStream::connect("127.0.0.1:10024").unwrap();
     let car = CarPayload::generate();
     let _ = stream.write(car.serialized_to_string().as_bytes());
+}
+
+// Send cars in multi-threads with adjustable numbers
+fn send_multi() {
+    // nop
+}
+
+fn print_usage() {
+    println!("
+    Usage:
+        cargo run [number_of_payloads] of each [number_of_threads]
+    The total number of payloads is [num_of_payloads] * [num_of_threads].
+             ");
+}
+
+fn main() {
+    println!("Start sending traffic data into 127.0.0.1:10024");
+    
+    // For parsing arguments.    
+    let args: Vec<String> = env::args().collect();
+    let mut num_of_payloads = 0;
+    let mut num_of_threads = 0;
+    match args.len() {
+        3 => {
+            match args[1].parse() {
+                Ok(num) => {
+                    num_of_payloads = num;
+                },
+                _ => {},
+            };
+            match args[2].parse() {
+                Ok(num) => {
+                    num_of_threads = num;
+                },
+                _ => {},
+            }
+        },
+        _ => {
+            print_usage();
+            process::exit(1);
+        }
+    };
+
+    // The vector for recording spawning thread and associated join handlers
+    let mut forks = vec![];
+    // First, the number of payloads 
+    for _ in 0..num_of_payloads {
+        // Spawn threads 
+        for _ in 0..num_of_threads {
+            forks.push(thread::spawn(move || {
+                send_a_car();
+            }));
+        }
+    }
+    // Joins
+    for child in forks {
+        // Wait each child to finish 
+        let _ = child.join();
+    }
 }
