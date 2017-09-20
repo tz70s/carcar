@@ -1,11 +1,12 @@
-# Car Bench
+# Carcar
 Benching data generator for fog emulator.
+
+* unstable currently
 
 ## Execution
 ```bash
-cd fake-listener
-cargo run
-# open another terminal
-cd tcp-stream
-cargo run [number_of_round] * [number_of_threads]
+# The car is the bench, fake is the testable sync tcp socket server
+# The total payloads is number_of_rounds * number_of_threads
+cargo run [car/fake] [number_of_rounds] [number_of_threads]
 ```
+

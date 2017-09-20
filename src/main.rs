@@ -1,7 +1,7 @@
 //! This is a data source generator for testing flink stream processing
 //! Author Tzu-Chiao Yeh @tz70s
 
-extern crate car_bench;
+extern crate carcar;
 
 use std::env;
 use std::process;
@@ -20,6 +20,8 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let mut num_of_payloads = 0;
     let mut num_of_threads = 0;
+    
+    // Used for check is car bench or fake server
     let mut is_car_bench = true;
     match args.len() {
         2 => {
@@ -69,8 +71,8 @@ fn main() {
     };
 
     if is_car_bench {
-        car_bench::cars::car_bench(num_of_payloads, num_of_threads);
+        carcar::cars::car_bench(num_of_payloads, num_of_threads);
     } else {
-        car_bench::fake_server::spawn();
+        carcar::fake_server::spawn();
     }
 }
