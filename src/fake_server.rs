@@ -3,15 +3,18 @@
 
 use std::net::{TcpListener, TcpStream};
 use std::io::Read;
+use std::thread;
 
 static mut NUMBER_OF_RECEIVED : u32 = 0;
 
-fn handle_client(mut stream: TcpStream) {
-    let mut buffer = String::new();
-    let _ = stream.read_to_string(&mut buffer);
-    unsafe {
-        NUMBER_OF_RECEIVED += 1;
-        println!("read {} : {}", NUMBER_OF_RECEIVED, buffer);
+fn handle_client(stream: &mut TcpStream) {
+    loop {
+        let mut buffer = String::new();
+        let _ = stream.take(1024).read_to_string(&mut buffer);
+        unsafe {
+            NUMBER_OF_RECEIVED += 1;
+            // println!("read {} : {}", NUMBER_OF_RECEIVED, buffer);
+        }
     }
 }
 
@@ -20,6 +23,9 @@ pub fn spawn() {
     let listener = TcpListener::bind(::ADDRESS).unwrap();
     println!("Listen at the {}", ::ADDRESS);
     for stream in listener.incoming() {
-        handle_client(stream.unwrap());
+        thread::spawn(|| {
+            let mut stream = stream.unwrap();
+            handle_client(&mut stream);
+        });
     }
 }
