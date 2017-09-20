@@ -2,6 +2,9 @@
 //! Author Tzu-Chiao Yeh @tz70s
 
 extern crate carcar;
+#[macro_use]
+extern crate toml;
+extern crate serde;
 
 use std::env;
 use std::process;

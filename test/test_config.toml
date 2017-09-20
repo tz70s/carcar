@@ -1,0 +1,7 @@
+[destination]
+ip = '127.0.0.1'
+port = '10023'
+
+[car]
+section = [1, 4]
+speed = [60, 110]
