@@ -10,8 +10,8 @@ use std::process;
 fn print_usage() {
     println!("
     Usage:
-        cargo run [types] [number_of_payloads] of each [number_of_threads]
-    The total number of payloads is [num_of_payloads] * [num_of_threads].
+        cargo run [car/fake] [number_of_rounds] [number_of_threads] 
+    The total number of payloads is [num_of_rounds] * [num_of_threads].
              ");
 }
 
