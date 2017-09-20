@@ -48,18 +48,31 @@ fn send_a_car() {
     let _ = stream.write(car.serialized_to_string().as_bytes());
 }
 
-// Send cars in multi-threads with adjustable numbers
-fn send_multi() {
-    // nop
+// Infinite bench,
+// each parallel round will wait all threads join and move into next step
+fn bench_infinite(num_of_threads: u32) {
+    loop {
+        // The vector for recording spawning thread and associated join handlers
+        let mut forks = vec![];
+        for _ in 0..num_of_threads {
+            forks.push(thread::spawn(move || {
+                send_a_car();
+            }));
+        }
+        // Joins
+        for child in forks {
+            // Wait each child to finish 
+            let _ = child.join();
+        }
+    }
 }
 
-pub fn car_bench(num_of_payloads: u32, num_of_threads: u32) {
-    println!("Start sending traffic data into {}", ::ADDRESS);
-    
+// number of rounds bench
+fn bench_finite(num_of_rounds: u32, num_of_threads: u32) {
     // The vector for recording spawning thread and associated join handlers
     let mut forks = vec![];
     // First, the number of payloads 
-    for _ in 0..num_of_payloads {
+    for _ in 0..num_of_rounds {
         // Spawn threads 
         for _ in 0..num_of_threads {
             forks.push(thread::spawn(move || {
@@ -71,5 +84,14 @@ pub fn car_bench(num_of_payloads: u32, num_of_threads: u32) {
     for child in forks {
         // Wait each child to finish 
         let _ = child.join();
+    }
+}
+
+pub fn bench(num_of_rounds: u32, num_of_threads: u32) {
+    println!("Start sending traffic data into {}", ::ADDRESS);
+    if num_of_rounds == 0 {
+        bench_infinite(num_of_threads);
+    } else {
+        bench_finite(num_of_rounds, num_of_threads);
     }
 }

@@ -16,7 +16,7 @@ fn handle_client(mut stream: TcpStream) {
 }
 
 pub fn spawn() {
-    println!("Hello, world!");
+    println!("Spawn a fake server for test...");
     let listener = TcpListener::bind(::ADDRESS).unwrap();
     println!("Listen at the {}", ::ADDRESS);
     for stream in listener.incoming() {

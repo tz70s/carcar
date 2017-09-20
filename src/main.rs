@@ -7,18 +7,19 @@ use std::env;
 use std::process;
 
 // Print the usage for wrong command line arguments
-fn print_usage() {
+fn helper() {
     println!("
     Usage:
         cargo run [car/fake] [number_of_rounds] [number_of_threads] 
     The total number of payloads is [num_of_rounds] * [num_of_threads].
              ");
+    process::exit(1);
 }
 
 fn main() {
     // For parsing arguments.    
     let args: Vec<String> = env::args().collect();
-    let mut num_of_payloads = 0;
+    let mut num_of_rounds = 0;
     let mut num_of_threads = 0;
     
     // Used for check is car bench or fake server
@@ -30,8 +31,7 @@ fn main() {
                     is_car_bench = false;
                 },
                 _ => {
-                    print_usage();
-                    process::exit(1);
+                    helper();
                 },
             };
         },
@@ -41,17 +41,15 @@ fn main() {
                     is_car_bench = true;
                 },
                 _ => {
-                    print_usage();
-                    process::exit(1);
+                    helper();
                 },
             };
             match args[2].parse() {
                 Ok(num) => {
-                    num_of_payloads = num;
+                    num_of_rounds = num;
                 },
                 _ => {
-                    print_usage();
-                    process::exit(1);
+                    helper();
                 },
             };
             match args[3].parse() {
@@ -59,19 +57,17 @@ fn main() {
                     num_of_threads = num;
                 },
                 _ => {
-                    print_usage();
-                    process::exit(1);
+                    helper();
                 },
             }
         },
         _ => {
-            print_usage();
-            process::exit(1);
+            helper();
         }
     };
 
     if is_car_bench {
-        carcar::cars::car_bench(num_of_payloads, num_of_threads);
+        carcar::car::bench(num_of_rounds, num_of_threads);
     } else {
         carcar::fake_server::spawn();
     }
