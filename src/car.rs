@@ -6,6 +6,8 @@ use std::io::prelude::*;
 use std::net::TcpStream;
 use self::rand::distributions::{IndependentSample, Range};
 use std::thread;
+use std::sync::mpsc::{Receiver, channel};
+use std::io::{self, BufRead};
 
 // Payload of an Car information
 #[derive(Debug)]
@@ -42,7 +44,7 @@ impl CarPayload {
 }
 
 // Generate data payload along with different threads
-fn send_a_car(num_of_rounds: u32) {
+fn send_a_car(num_of_rounds: u32, receiver: Receiver<bool>) {
     let mut stream = TcpStream::connect(::ADDRESS).unwrap();
     let mut count: u32 = 0;
     loop {
@@ -51,6 +53,16 @@ fn send_a_car(num_of_rounds: u32) {
         count += 1;
         if count == num_of_rounds {
             break;
+        }
+        match receiver.try_recv() {
+            Ok(stop_signal) => {
+                if stop_signal {
+                    println!("Terminated");
+                    break;
+                }
+            },
+            Err(_) => {} 
+            // Keep going
         }
     }
 }
@@ -61,15 +73,26 @@ fn send_a_car(num_of_rounds: u32) {
 fn bench_parallel(num_of_rounds: u32, num_of_threads: u32) {
     // The vector for recording spawning thread and associated join handlers
     let mut forks = vec![];
+    let mut chan_of_each = vec![];
     for _ in 0..num_of_threads {
+        let (sender, receiver) = channel();
+        sender.send(false);
         forks.push(thread::spawn(move || {
-            send_a_car(num_of_rounds);
+            send_a_car(num_of_rounds, receiver);
         }));
+        chan_of_each.push(sender);
     }
-    // Joins
-    for child in forks {
-        // Wait each child to finish 
-        let _ = child.join();
+    // Use stdin for terminate the spawnning threads.
+    // TODO: makes the channel identified more verbose, not just an vector of integer.
+    // TODO: make the stdin into a new TCP socket, CAREFULLY dealing with error here!
+    // TODO: what if spawning a new thread here?
+    let stdin = io::stdin();
+    loop {
+        let mut line = String::new();
+        let _ = stdin.lock().read_line(&mut line);
+        let which = line.trim().parse::<u32>().expect("invalid digits!");
+        let which = which as usize;
+        chan_of_each[which].send(true);
     }
 }
 

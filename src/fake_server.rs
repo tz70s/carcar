@@ -13,7 +13,7 @@ fn handle_client(stream: &mut TcpStream) {
         let _ = stream.take(1024).read_to_string(&mut buffer);
         unsafe {
             NUMBER_OF_RECEIVED += 1;
-            // println!("read {} : {}", NUMBER_OF_RECEIVED, buffer);
+            println!("read {} : {}", NUMBER_OF_RECEIVED, buffer);
         }
     }
 }
