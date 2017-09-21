@@ -48,6 +48,7 @@ fn send_a_car(num_of_rounds: u32, receiver: Receiver<bool>) {
     let mut stream = TcpStream::connect(::ADDRESS).unwrap();
     let mut count: u32 = 0;
     loop {
+        // Bottleneck here
         let car = CarPayload::generate();
         let _ = stream.write(car.serialized_to_string().as_bytes());
         count += 1;
