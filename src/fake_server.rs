@@ -22,7 +22,7 @@ fn handle_client(stream: &mut TcpStream) -> i32 {
     num_of_receive
 }
 
-pub fn spawn() {
+pub fn spawn(num_of_threads: u32) {
     println!("Spawn a fake server for test...");
     let listener = TcpListener::bind(::ADDRESS).unwrap();
     println!("Listen at the {}", ::ADDRESS);
@@ -38,7 +38,7 @@ pub fn spawn() {
             let num_of_receive = handle_client(&mut stream);
             sender.send(num_of_receive);
         });
-        if break_count == 9 {
+        if break_count == num_of_threads {
             break;
         }
     }

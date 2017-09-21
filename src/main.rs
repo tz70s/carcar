@@ -28,7 +28,7 @@ fn main() {
     // Used for check is car bench or fake server
     let mut is_car_bench = true;
     match args.len() {
-        2 => {
+        3 => {
             match &args[1][..] {
                 "fake" => {
                     is_car_bench = false;
@@ -37,6 +37,14 @@ fn main() {
                     helper();
                 },
             };
+            match args[2].parse() {
+                Ok(num) => {
+                    num_of_threads = num;
+                },
+                _ => {
+                    helper();
+                }
+            }
         },
         4 => {
             match &args[1][..] {
@@ -72,6 +80,6 @@ fn main() {
     if is_car_bench {
         carcar::car::bench(num_of_rounds, num_of_threads);
     } else {
-        carcar::fake_server::spawn();
+        carcar::fake_server::spawn(num_of_threads);
     }
 }
