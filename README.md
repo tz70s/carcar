@@ -15,3 +15,8 @@ cargo run [car/fake] 0 [number_of_threads]
 # in lib.rs.
 cargo run fake
 ```
+
+## TODO
+1. Extend the threads model to be runtime controlled with sending different target.
+2. Extend the target destination into multiple.
+3. Migrate the configuration file into the main code.

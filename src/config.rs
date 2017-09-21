@@ -28,8 +28,7 @@ struct Destination {
 
 #[derive(Deserialize)]
 struct CarConfig {
-    // None, currently
-    section: [u32; 2],
+    position: [u32; 4],
     speed: [u32; 2],
 }
 
@@ -59,9 +58,11 @@ mod test_config {
         let config = parse_toml(&file_name[..]);
         assert_eq!(config.destination.ip, "127.0.0.1");
         assert_eq!(config.destination.port, "10023");
-        assert_eq!(config.car.section[0], 1);
-        assert_eq!(config.car.section[1], 4);
+        assert_eq!(config.car.position[0], 0);
+        assert_eq!(config.car.position[1], 4000);
+        assert_eq!(config.car.position[2], 0);
+        assert_eq!(config.car.position[3], 200);
         assert_eq!(config.car.speed[0], 60);
-        assert_eq!(config.car.speed[1], 110);
+        assert_eq!(config.car.speed[1], 120);
     }
 }
