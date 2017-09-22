@@ -13,21 +13,19 @@ use std::io::{self, BufRead};
 /// The sended objects need to implement the bencher trait.
 pub trait Bencher {
     fn generate() -> Self;
+    fn render(&mut self, c: &::config::Config);
     fn serialized_to_string(&self) -> String;
 }
 
 // Generate data payload along with different threads
-fn fire<T: Bencher>(num_of_rounds: u32, receiver: Receiver<bool>) {
-    let mut stream = TcpStream::connect(::ADDRESS).unwrap();
-    let mut count: u32 = 0;
+fn fire<T: Bencher>(receiver: Receiver<bool>, c: ::config::Config) {
+    let mut stream = TcpStream::connect(c.destination.ip.to_owned() + ":" +
+                                        &c.destination.port).unwrap();
+    let mut bencher = T::generate();
     loop {
-        // Bottleneck here
-        let bencher = T::generate();
+        bencher.render(&c);
         let _ = stream.write(bencher.serialized_to_string().as_bytes());
-        count += 1;
-        if count == num_of_rounds {
-            break;
-        }
+        // Try to receive the signal
         match receiver.try_recv() {
             Ok(stop_signal) => {
                 if stop_signal {
@@ -44,15 +42,16 @@ fn fire<T: Bencher>(num_of_rounds: u32, receiver: Receiver<bool>) {
 // Run parallel of each tcp stream connections.
 // Each stream will continously sending data to the destination.
 // TODO: Optimization ( Object creation? )
-fn bench_parallel(num_of_rounds: u32, num_of_threads: u32) {
+fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
     // The vector for recording spawning thread and associated join handlers
     let mut forks = vec![];
     let mut chan_of_each = vec![];
     for _ in 0..num_of_threads {
         let (sender, receiver) = channel();
         sender.send(false);
+        let clone_c = c.clone();
         forks.push(thread::spawn(move || {
-            fire::<::car::CarPayload>(num_of_rounds, receiver);
+            fire::<::car::CarPayload>(receiver, clone_c);
         }));
         chan_of_each.push(sender);
     }
@@ -71,7 +70,7 @@ fn bench_parallel(num_of_rounds: u32, num_of_threads: u32) {
 }
 
 // Entry point of car module
-pub fn bench(num_of_rounds: u32, num_of_threads: u32) {
-    println!("Start sending traffic data into {}", ::ADDRESS);
-    bench_parallel(num_of_rounds, num_of_threads);
+pub fn bench(num_of_threads: u32, c: &::config::Config) {
+    println!("Start sending traffic data into {}", c.destination.ip.to_owned() + ":" + &c.destination.port);
+    bench_parallel(num_of_threads, c);
 }

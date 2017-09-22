@@ -7,7 +7,6 @@ use self::rand::distributions::{IndependentSample, Range};
 // Payload of an Car information
 #[derive(Debug)]
 pub struct CarPayload {
-    section : u32,
     position: (u32, u32),
     speed: u32,
     // Additional information?
@@ -15,23 +14,26 @@ pub struct CarPayload {
 
 impl ::bench::Bencher for CarPayload {
     fn generate() -> CarPayload {
-        let mut rng = rand::thread_rng();
-        // Section range from 1-4
-        let sections_range = Range::new(1, 4);
-        // Position range from ([100-1000])
-        let east_west_range = Range::new(100, 1000);
-        let north_south_range = Range::new(100, 150);
-        // Speed range from 60-110
-        let speed_range = Range::new(60, 110);
-        let sec = sections_range.ind_sample(&mut rng);
-
+        // Just generate the object
         CarPayload {
-           section: sec,
-           position: (north_south_range.ind_sample(&mut rng), 
-                      east_west_range.ind_sample(&mut rng) + sec * 1000),
-           speed: speed_range.ind_sample(&mut rng),
+           position: (0, 0),
+           speed: 0,
         }
     }
+
+    // Render a car payload
+    fn render(&mut self, c: &::config::Config) {
+        let mut rng = rand::thread_rng();
+        // Position range from [east, west, north, south]
+        let east_west_range = Range::new(c.car.position[0], c.car.position[1]);
+        let north_south_range = Range::new(c.car.position[2], c.car.position[3]);
+        // Speed range
+        let speed_range = Range::new(c.car.speed[0], c.car.speed[1]);
+        self.position = (east_west_range.ind_sample(&mut rng),
+                         north_south_range.ind_sample(&mut rng));
+        self.speed = speed_range.ind_sample(&mut rng);
+    }
+
     // Serialized to string
     fn serialized_to_string(&self) -> String {
         format!("{:?}", self)

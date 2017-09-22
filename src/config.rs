@@ -14,26 +14,26 @@ fn open_config(file_name: &str, mut contents: &mut String) {
     file.read_to_string(&mut contents).unwrap();
 }
 
-#[derive(Deserialize)]
-struct Config {
-    destination: Destination,
-    car: CarConfig,
+#[derive(Deserialize, Clone)]
+pub struct Config {
+    pub destination: Destination,
+    pub car: CarConfig,
 }
 
-#[derive(Deserialize)]
-struct Destination {
-    ip: String,
-    port: String,
+#[derive(Deserialize, Clone)]
+pub struct Destination {
+    pub ip: String,
+    pub port: String,
 }
 
-#[derive(Deserialize)]
-struct CarConfig {
-    position: [u32; 4],
-    speed: [u32; 2],
+#[derive(Deserialize, Clone)]
+pub struct CarConfig {
+    pub position: [u32; 4],
+    pub speed: [u32; 2],
 }
 
 // Parsing toml
-fn parse_toml(file_name: &str) -> Config {
+pub fn parse_toml(file_name: &str) -> Config {
     let mut contents = String::new();
     open_config(file_name, &mut contents);
     let config: Config = ::toml::from_str(&contents[..]).unwrap();

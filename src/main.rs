@@ -2,84 +2,60 @@
 //! Author Tzu-Chiao Yeh @tz70s
 
 extern crate carcar;
-#[macro_use]
-extern crate toml;
-extern crate serde;
+extern crate clap;
 
-use std::env;
+use clap::{Arg, App, SubCommand};
+use std::str::FromStr;
 use std::process;
 
-// Print the usage for wrong command line arguments
-fn helper() {
-    println!("
-    Usage:
-        cargo run [car/fake] [number_of_rounds] [number_of_threads] 
-    The total number of payloads is [num_of_rounds] * [num_of_threads].
-             ");
-    process::exit(1);
-}
-
+/// Entry point.
 fn main() {
-    // For parsing arguments.    
-    let args: Vec<String> = env::args().collect();
-    let mut num_of_rounds = 0;
-    let mut num_of_threads = 0;
+    // Parsing commands from clap.
+    let matches = App::new("Carcar")
+                        .version("0.3")
+                        .author("Tzu-Chiao Yeh <su3g4284zo6y7@gmail.com>")
+                        .about("Car-liked benching data generator for streaming testing")
+                        .arg(Arg::with_name("concurrency")
+                             .short("c")
+                             .long("concurrency")
+                             .help("Sets the level(number) of concurrent threads")
+                             .takes_value(true))
+                        .arg(Arg::with_name("debug")
+                             .short("d")
+                             .long("debug")
+                             .help("Spawn the debug server")
+                             .multiple(true))
+                        .arg(Arg::with_name("model")
+                             .short("m")
+                             .long("model")
+                             .help("The file path for a specific model")
+                             .takes_value(true))
+                        .subcommand(SubCommand::with_name("list")
+                                    .about("List the existed models"))
+                        .get_matches();
     
-    // Used for check is car bench or fake server
-    let mut is_car_bench = true;
-    match args.len() {
-        3 => {
-            match &args[1][..] {
-                "fake" => {
-                    is_car_bench = false;
-                },
-                _ => {
-                    helper();
-                },
-            };
-            match args[2].parse() {
-                Ok(num) => {
-                    num_of_threads = num;
-                },
-                _ => {
-                    helper();
-                }
-            }
-        },
-        4 => {
-            match &args[1][..] {
-                "car" => {
-                    is_car_bench = true;
-                },
-                _ => {
-                    helper();
-                },
-            };
-            match args[2].parse() {
-                Ok(num) => {
-                    num_of_rounds = num;
-                },
-                _ => {
-                    helper();
-                },
-            };
-            match args[3].parse() {
-                Ok(num) => {
-                    num_of_threads = num;
-                },
-                _ => {
-                    helper();
-                },
-            }
+    // Level of concurrency
+    let concurrency = matches.value_of("concurrency").unwrap_or("1");
+    let concurrency: u32 = FromStr::from_str(concurrency).unwrap();
+ 
+    // Lists the existed models
+    if let Some(_) = matches.subcommand_matches("list") {
+        println!("single_road_model");
+        process::exit(0);
+    }
+    // Model file, defualt is the single_road_model
+    let model_file = matches.value_of("model").unwrap_or("model/single_road_model.toml"); 
+    
+    // Parse the configuration file
+    let conf = carcar::config::parse_toml(model_file);
+
+    // If the debug mode is specified, spawn the fake server for testing
+    match matches.occurrences_of("debug") {
+        0 => {
+            carcar::bench::bench(concurrency, &conf);
         },
         _ => {
-            helper();
+            carcar::fake_server::spawn(concurrency);   
         }
-    };
-
-    if is_car_bench {
-        carcar::bench::bench(num_of_rounds, num_of_threads);
-    } else {
-        carcar::fake_server::spawn(num_of_threads);
     }
 }
