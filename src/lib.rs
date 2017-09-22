@@ -9,5 +9,6 @@ extern crate serde_derive;
 pub mod car;
 pub mod fake_server;
 pub mod config;
+pub mod bench;
 
 static ADDRESS: &'static str = "127.0.0.1:10023";

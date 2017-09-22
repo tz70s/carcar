@@ -78,7 +78,7 @@ fn main() {
     };
 
     if is_car_bench {
-        carcar::car::bench(num_of_rounds, num_of_threads);
+        carcar::bench::bench(num_of_rounds, num_of_threads);
     } else {
         carcar::fake_server::spawn(num_of_threads);
     }
