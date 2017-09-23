@@ -49,7 +49,7 @@ impl ThreadFrame {
 }
 
 /// Generate data payload along with different threads
-fn fire<T: Bencher>(receiver: Receiver<bool>, c: ::config::Config, tf: ThreadFrame) {
+fn fire<T: Bencher>(receiver: Receiver<ThreadFrame>, c: ::config::Config, tf: ThreadFrame) {
     let mut stream = TcpStream::connect(tf.destination).unwrap();
     let mut bencher = T::generate();
     loop {
@@ -57,11 +57,11 @@ fn fire<T: Bencher>(receiver: Receiver<bool>, c: ::config::Config, tf: ThreadFra
         let _ = stream.write(bencher.serialized_to_string().as_bytes());
         // Try to receive the signal
         match receiver.try_recv() {
-            Ok(stop_signal) => {
-                if stop_signal {
-                    println!("Terminated");
+            Ok(ntf) => {
+                if ntf.stop_signal {
                     break;
                 }
+                stream = TcpStream::connect(ntf.destination).unwrap();
             },
             Err(_) => {} 
             // Keep going
@@ -83,7 +83,6 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
         let (sender, receiver) = channel();
         // Create a new thread frame for the thread.
         let mut send_tf = ThreadFrame::new(num, c.destination.ip.to_owned() + ":" + &c.destination.port, false);
-        sender.send(false).unwrap();
         let mut recv_tf = send_tf.clone();
         let clone_c = c.clone();
         forks.push(thread::spawn(move || {
@@ -123,7 +122,7 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
                     match command.next() {
                         Some(s) => {
                             chan_of_each[which].1.destination = s.to_owned();
-                            // TODO: send the new dest to the thread.
+                            chan_of_each[which].0.send(chan_of_each[which].1.clone()).expect("can't send the thread frame");
                         },
                         None => {}
                     }
@@ -142,7 +141,7 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
                     // Terminate, makes the stop signal to true
                     chan_of_each[which].1.stop_signal = true;
                     // Sender sends true to the target thread
-                    chan_of_each[which].0.send(true).unwrap();
+                    chan_of_each[which].0.send(chan_of_each[which].1.clone()).expect("can't send the thread frame");
                 }
             },
             _ => {

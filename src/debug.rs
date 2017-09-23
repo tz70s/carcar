@@ -9,7 +9,7 @@ use std::time::{SystemTime};
 use std::sync::mpsc::{channel};
 
 /// Handling client of each stream
-fn handle_client(stream: &mut TcpStream, logger: bool) -> i32 {
+fn handle_client(stream: &mut TcpStream, logger: bool, keep_time: u64) -> i32 {
     let mut num_of_receive = 0;
     let now = SystemTime::now();
     // Trim 1MB stream and iterate to the next step, due to reveal the stream content.
@@ -20,7 +20,7 @@ fn handle_client(stream: &mut TcpStream, logger: bool) -> i32 {
             println!("{}", buffer);
         }
         num_of_receive += 1;
-        if now.elapsed().unwrap().as_secs() == 10 {
+        if now.elapsed().unwrap().as_secs() == keep_time {
             break;
         }
     }
@@ -28,10 +28,10 @@ fn handle_client(stream: &mut TcpStream, logger: bool) -> i32 {
 }
 
 /// Spawn a fake server
-pub fn spawn(num_of_threads: u32, logger: bool) {
+pub fn spawn(num_of_threads: u32, dport: &str, logger: bool, keep_time: u64) {
     println!("Spawn a fake server for test...");
-    let listener = TcpListener::bind(::ADDRESS).unwrap();
-    println!("Listen at the {}", ::ADDRESS);
+    let listener = TcpListener::bind("127.0.0.1:".to_owned() + dport).unwrap();
+    println!("Listen at the {}", "127.0.0.1:".to_owned() + dport);
     let mut total = 0;
     let mut break_count = 0;
     let mut receiver_vec = vec![];
@@ -41,7 +41,7 @@ pub fn spawn(num_of_threads: u32, logger: bool) {
         receiver_vec.push(receiver);
         thread::spawn(move || {
             let mut stream = stream.unwrap();
-            let num_of_receive = handle_client(&mut stream, logger);
+            let num_of_receive = handle_client(&mut stream, logger, keep_time);
             sender.send(num_of_receive).unwrap();
         });
         if break_count == num_of_threads {

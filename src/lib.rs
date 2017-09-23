@@ -11,6 +11,3 @@ pub mod car;
 pub mod debug;
 pub mod config;
 pub mod bench;
-
-// TODO: remove this.
-static ADDRESS: &'static str = "127.0.0.1:10023";

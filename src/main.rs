@@ -35,6 +35,16 @@ fn main() {
                              .long("model")
                              .help("The file path for a specific model")
                              .takes_value(true))
+                        .arg(Arg::with_name("dport")
+                             .short("p")
+                             .long("dport")
+                             .help("The port which is the debug server listened to")
+                             .takes_value(true))
+                        .arg(Arg::with_name("dtime")
+                             .short("t")
+                             .long("dtime")
+                             .help("The keep time of the debug server handling stream")
+                             .takes_value(true))
                         .subcommand(SubCommand::with_name("list")
                                     .about("List the existed models"))
                         .get_matches();
@@ -65,7 +75,12 @@ fn main() {
             carcar::bench::bench(concurrency, &conf);
         },
         _ => {
-            carcar::debug::spawn(concurrency, logger);   
+            // Check whether the debug server is on, or default is 10023
+            let dport = matches.value_of("dport").unwrap_or("10023");
+            // The keep time parsed from args
+            let dtime = matches.value_of("dtime").unwrap_or("10");
+            let dtime = dtime.parse::<u64>().unwrap();
+            carcar::debug::spawn(concurrency, dport, logger, dtime); 
         }
     }
 }
