@@ -17,10 +17,27 @@ pub trait Bencher {
     fn serialized_to_string(&self) -> String;
 }
 
+/// The thread frame to each.
+#[derive(Clone)]
+struct ThreadFrame {
+    id: u32,
+    destination: String,
+    stop_signal: bool,
+}
+
+impl ThreadFrame {
+    fn new(id: u32, destination: String, stop_signal: bool) -> ThreadFrame {
+        ThreadFrame {
+            id: id,
+            destination: destination,
+            stop_signal: stop_signal
+        }
+    }
+}
+
 // Generate data payload along with different threads
-fn fire<T: Bencher>(receiver: Receiver<bool>, c: ::config::Config) {
-    let mut stream = TcpStream::connect(c.destination.ip.to_owned() + ":" +
-                                        &c.destination.port).unwrap();
+fn fire<T: Bencher>(receiver: Receiver<bool>, c: ::config::Config, tf: ThreadFrame) {
+    let mut stream = TcpStream::connect(tf.destination).unwrap();
     let mut bencher = T::generate();
     loop {
         bencher.render(&c);
@@ -41,20 +58,33 @@ fn fire<T: Bencher>(receiver: Receiver<bool>, c: ::config::Config) {
 
 // Run parallel of each tcp stream connections.
 // Each stream will continously sending data to the destination.
-// TODO: Optimization ( Object creation? )
 fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
     // The vector for recording spawning thread and associated join handlers
     let mut forks = vec![];
     let mut chan_of_each = vec![];
-    for _ in 0..num_of_threads {
+    // Cloning thread frame to each, by parsing config and each weight.
+    // The content will contain:
+    // 1. Target destination.
+    // 2. Stop signal.
+    for num in 0..num_of_threads {
         let (sender, receiver) = channel();
+        // Create a new thread frame for the thread.
+        let mut send_tf = ThreadFrame::new(num, c.destination.ip.to_owned() + ":" + &c.destination.port, false);
         sender.send(false);
+        let mut recv_tf = send_tf.clone();
         let clone_c = c.clone();
         forks.push(thread::spawn(move || {
-            fire::<::car::CarPayload>(receiver, clone_c);
+            fire::<::car::CarPayload>(receiver, clone_c, recv_tf);
         }));
-        chan_of_each.push(sender);
+        chan_of_each.push((sender, send_tf));
     }
+
+    for frame in &chan_of_each {
+        if !frame.1.stop_signal {
+            println!("[{}] stream to - {}", frame.1.id, frame.1.destination);
+        }
+    }
+
     // Use stdin for terminate the spawnning threads.
     // TODO: makes the channel identified more verbose, not just an vector of integer.
     // TODO: make the stdin into a new TCP socket, CAREFULLY dealing with error here!
@@ -65,7 +95,15 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
         let _ = stdin.lock().read_line(&mut line);
         let which = line.trim().parse::<u32>().expect("invalid digits!");
         let which = which as usize;
-        chan_of_each[which].send(true);
+        // Terminate, currently, makes the stop signal to true.
+        chan_of_each[which].1.stop_signal = true;
+        chan_of_each[which].0.send(true).unwrap();
+        // Print the current running threads
+        for frame in &chan_of_each {
+            if !frame.1.stop_signal {
+                println!("[{}] stream to - {}", frame.1.id, frame.1.destination);
+            }
+        }
     }
 }
 
