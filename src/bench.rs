@@ -8,13 +8,25 @@ use std::net::TcpStream;
 use std::thread;
 use std::sync::mpsc::{Receiver, channel};
 use std::io::{self, BufRead};
-
+use std::process;
 
 /// The sended objects need to implement the bencher trait.
 pub trait Bencher {
     fn generate() -> Self;
     fn render(&mut self, c: &::config::Config);
     fn serialized_to_string(&self) -> String;
+}
+
+/// The about function which will print at the top of screen.
+fn about_fn() {
+    process::Command::new("clear").status().unwrap();
+    println!("Carcar 0.3");
+    println!("Tzu-Chiao Yeh <su3g4284zo6y7@gmail.com>");
+    println!("Car-liked benching data generator for stream processing");
+    println!("The interactive commands:");
+    println!("[1] migrate <thread_number> <destination>");
+    println!("[2] stop <thread_number>");
+    println!("=====================================================================");
 }
 
 /// The thread frame to each.
@@ -78,12 +90,14 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
         }));
         chan_of_each.push((sender, send_tf));
     }
-
+    
+    about_fn();
     for frame in &chan_of_each {
         if !frame.1.stop_signal {
             println!("[{}] stream to - {}", frame.1.id, frame.1.destination);
         }
     }
+    println!("=====================================================================");
 
     // Use stdin for terminate the spawnning threads.
     // TODO: makes the channel identified more verbose, not just an vector of integer.
@@ -93,17 +107,60 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
     loop {
         let mut line = String::new();
         let _ = stdin.lock().read_line(&mut line);
-        let which = line.trim().parse::<u32>().expect("invalid digits!");
-        let which = which as usize;
-        // Terminate, currently, makes the stop signal to true.
-        chan_of_each[which].1.stop_signal = true;
-        chan_of_each[which].0.send(true).unwrap();
+        let mut command = line.split_whitespace();
+        let which;
+        match command.next().unwrap() {
+            "migrate" => {
+                // To change the target destination
+                which = match command.next() {
+                    Some(s) => {
+                        s.parse::<i32>().expect("invalid digits")
+                    },
+                    None => -1
+                };
+                
+                if which >= 0 {
+                    let which = which as usize;
+                    
+                    match command.next() {
+                        Some(s) => {
+                            chan_of_each[which].1.destination = s.to_owned();
+                            // TODO: send the new dest to the thread.
+                        },
+                        None => {}
+                    }
+                }
+            },
+            "stop" => {
+                // Stop a thread
+                which = match command.next(){
+                    Some(s) => {
+                        s.parse::<i32>().expect("invalid digits")
+                    },
+                    None => -1
+                };
+                
+                if which >= 0 {
+                    let which = which as usize;
+                    // Terminate, currently, makes the stop signal to true.
+                    chan_of_each[which].1.stop_signal = true;
+                    chan_of_each[which].0.send(true).unwrap();
+                }
+            },
+            _ => {
+                // nop, drop to the next iteration
+            }
+        };
+        
+
+        about_fn();
         // Print the current running threads
         for frame in &chan_of_each {
             if !frame.1.stop_signal {
                 println!("[{}] stream to - {}", frame.1.id, frame.1.destination);
             }
         }
+        println!("=====================================================================");
     }
 }
 
