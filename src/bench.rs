@@ -1,5 +1,5 @@
-//! This is a data source generator for testing flink stream processing
-//! Author Tzu-Chiao Yeh @tz70s
+/// This is a data source generator for testing stream processing
+/// Author Tzu-Chiao Yeh @tz70s
 
 /// This file works on benching by spawning multiple threads.
 
@@ -48,7 +48,7 @@ impl ThreadFrame {
     }
 }
 
-// Generate data payload along with different threads
+/// Generate data payload along with different threads
 fn fire<T: Bencher>(receiver: Receiver<bool>, c: ::config::Config, tf: ThreadFrame) {
     let mut stream = TcpStream::connect(tf.destination).unwrap();
     let mut bencher = T::generate();
@@ -69,8 +69,8 @@ fn fire<T: Bencher>(receiver: Receiver<bool>, c: ::config::Config, tf: ThreadFra
     }
 }
 
-// Run parallel of each tcp stream connections.
-// Each stream will continously sending data to the destination.
+/// Run parallel of each tcp stream connections.
+/// Each stream will continously sending data to the destination.
 fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
     // The vector for recording spawning thread and associated join handlers
     let mut forks = vec![];
@@ -160,7 +160,7 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
     }
 }
 
-// Entry point of car module
+/// Entry point of benchmark module
 pub fn bench(num_of_threads: u32, c: &::config::Config) {
     println!("Start sending traffic data into {}", c.destination.ip.to_owned() + ":" + &c.destination.port);
     bench_parallel(num_of_threads, c);

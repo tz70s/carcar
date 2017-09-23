@@ -1,5 +1,5 @@
-//! This is a data source generator for testing flink stream processing
-//! Author Tzu-Chiao Yeh @tz70s
+/// This is a data source generator for testing stream processing
+/// Author Tzu-Chiao Yeh @tz70s
 
 #[macro_use]
 extern crate toml;
@@ -8,7 +8,7 @@ extern crate serde_derive;
 
 // modules
 pub mod car;
-pub mod fake_server;
+pub mod debug;
 pub mod config;
 pub mod bench;
 

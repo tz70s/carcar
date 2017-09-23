@@ -1,5 +1,5 @@
-//! This is a data source generator for testing flink stream processing
-//! Author Tzu-Chiao Yeh @tz70s
+/// This is a data source generator for testing stream processing
+/// Author Tzu-Chiao Yeh @tz70s
 
 /// This file parse the config from toml :
 /// 1. cars configuration
@@ -8,7 +8,7 @@
 use std::fs::File;
 use std::io::prelude::*;
 
-// Open configuration file, pass the file name from argument
+/// Open configuration file, pass the file name from argument
 fn open_config(file_name: &str, mut contents: &mut String) {
     let mut file = File::open(file_name).unwrap();
     file.read_to_string(&mut contents).unwrap();
@@ -32,7 +32,7 @@ pub struct CarConfig {
     pub speed: [u32; 2],
 }
 
-// Parsing toml
+/// Parsing toml
 pub fn parse_toml(file_name: &str) -> Config {
     let mut contents = String::new();
     open_config(file_name, &mut contents);
@@ -40,7 +40,7 @@ pub fn parse_toml(file_name: &str) -> Config {
     config
 }
 
-// Do some unit testing for toml file parsing
+/// Do some unit testing for toml file parsing
 #[cfg(test)]
 mod test_config {
     #[test]

@@ -1,5 +1,6 @@
-//! This is a fake listener for testing tcpstream
-//! Author Tzu-Chiao Yeh, @tz70s
+/// This work is a data source generator for testing stream processing
+/// Author Tzu-Chiao Yeh, @tz70s
+/// In this <debug.rs> file, spawn a fake server for receiving data and counting the throughput, in debug mode.
 
 use std::net::{TcpListener, TcpStream};
 use std::io::Read;

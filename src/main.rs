@@ -1,5 +1,5 @@
-//! This is a data source generator for testing flink stream processing
-//! Author Tzu-Chiao Yeh @tz70s
+/// This is a data source generator for testing flink stream processing
+/// Author Tzu-Chiao Yeh @tz70s
 
 extern crate carcar;
 extern crate clap;
@@ -8,7 +8,7 @@ use clap::{Arg, App, SubCommand};
 use std::str::FromStr;
 use std::process;
 
-/// Entry point.
+/// Entry point
 fn main() {
     // Parsing commands from clap.
     let matches = App::new("Carcar")
@@ -65,7 +65,7 @@ fn main() {
             carcar::bench::bench(concurrency, &conf);
         },
         _ => {
-            carcar::fake_server::spawn(concurrency, logger);   
+            carcar::debug::spawn(concurrency, logger);   
         }
     }
 }

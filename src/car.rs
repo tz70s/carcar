@@ -1,10 +1,10 @@
-//! This is a data source generator for testing flink stream processing
-//! Author Tzu-Chiao Yeh @tz70s
+/// This is a data source generator for testing stream processing
+/// Author Tzu-Chiao Yeh @tz70s
 extern crate rand;
 
 use self::rand::distributions::{IndependentSample, Range};
 
-// Payload of an Car information
+/// Payload of an Car information
 #[derive(Debug)]
 pub struct CarPayload {
     position: (u32, u32),
