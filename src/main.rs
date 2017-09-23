@@ -25,6 +25,11 @@ fn main() {
                              .long("debug")
                              .help("Spawn the debug server")
                              .multiple(true))
+                        .arg(Arg::with_name("log")
+                             .short("l")
+                             .long("log")
+                             .help("Print the payload sent from carcar")
+                             .multiple(true))
                         .arg(Arg::with_name("model")
                              .short("m")
                              .long("model")
@@ -48,6 +53,16 @@ fn main() {
     
     // Parse the configuration file
     let conf = carcar::config::parse_toml(model_file);
+    
+    // Checkout whether the logger is opened.
+    let logger = match matches.occurrences_of("log") {
+        0 => {
+            false
+        },
+        _ => {
+            true
+        }
+    };
 
     // If the debug mode is specified, spawn the fake server for testing
     match matches.occurrences_of("debug") {
@@ -55,7 +70,7 @@ fn main() {
             carcar::bench::bench(concurrency, &conf);
         },
         _ => {
-            carcar::fake_server::spawn(concurrency);   
+            carcar::fake_server::spawn(concurrency, logger);   
         }
     }
 }

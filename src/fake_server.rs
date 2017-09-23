@@ -7,13 +7,16 @@ use std::thread;
 use std::time::{Duration, SystemTime};
 use std::sync::mpsc::{Receiver, channel};
 
-fn handle_client(stream: &mut TcpStream) -> i32 {
+fn handle_client(stream: &mut TcpStream, logger: bool) -> i32 {
     let mut num_of_receive = 0;
     let now = SystemTime::now();
     
     loop {
         let mut buffer = String::new();
         let _ = stream.take(1048576).read_to_string(&mut buffer);
+        if logger {
+            println!("{}", buffer);
+        }
         num_of_receive += 1;
         if now.elapsed().unwrap().as_secs() == 10 {
             break;
@@ -22,7 +25,7 @@ fn handle_client(stream: &mut TcpStream) -> i32 {
     num_of_receive
 }
 
-pub fn spawn(num_of_threads: u32) {
+pub fn spawn(num_of_threads: u32, logger: bool) {
     println!("Spawn a fake server for test...");
     let listener = TcpListener::bind(::ADDRESS).unwrap();
     println!("Listen at the {}", ::ADDRESS);
@@ -35,7 +38,7 @@ pub fn spawn(num_of_threads: u32) {
         receiver_vec.push(receiver);
         thread::spawn(move || {
             let mut stream = stream.unwrap();
-            let num_of_receive = handle_client(&mut stream);
+            let num_of_receive = handle_client(&mut stream, logger);
             sender.send(num_of_receive);
         });
         if break_count == num_of_threads {
