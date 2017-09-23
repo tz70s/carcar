@@ -20,7 +20,7 @@ impl ::bench::Bencher for CarPayload {
            speed: 0,
         }
     }
-
+    
     // Render a car payload
     fn render(&mut self, c: &::config::Config) {
         let mut rng = rand::thread_rng();
@@ -33,7 +33,7 @@ impl ::bench::Bencher for CarPayload {
                          north_south_range.ind_sample(&mut rng));
         self.speed = speed_range.ind_sample(&mut rng);
     }
-
+    
     // Serialized to string
     fn serialized_to_string(&self) -> String {
         format!("{:?}", self)

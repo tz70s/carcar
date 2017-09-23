@@ -37,6 +37,7 @@ struct ThreadFrame {
     stop_signal: bool,
 }
 
+/// Generate new thread frame
 impl ThreadFrame {
     fn new(id: u32, destination: String, stop_signal: bool) -> ThreadFrame {
         ThreadFrame {
@@ -82,7 +83,7 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
         let (sender, receiver) = channel();
         // Create a new thread frame for the thread.
         let mut send_tf = ThreadFrame::new(num, c.destination.ip.to_owned() + ":" + &c.destination.port, false);
-        sender.send(false);
+        sender.send(false).unwrap();
         let mut recv_tf = send_tf.clone();
         let clone_c = c.clone();
         forks.push(thread::spawn(move || {
@@ -90,7 +91,6 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
         }));
         chan_of_each.push((sender, send_tf));
     }
-    
     about_fn();
     for frame in &chan_of_each {
         if !frame.1.stop_signal {
@@ -98,7 +98,6 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
         }
     }
     println!("=====================================================================");
-
     // Use stdin for terminate the spawnning threads.
     // TODO: makes the channel identified more verbose, not just an vector of integer.
     // TODO: make the stdin into a new TCP socket, CAREFULLY dealing with error here!
@@ -118,10 +117,9 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
                     },
                     None => -1
                 };
-                
                 if which >= 0 {
                     let which = which as usize;
-                    
+                    // Match the new target destination
                     match command.next() {
                         Some(s) => {
                             chan_of_each[which].1.destination = s.to_owned();
@@ -139,11 +137,11 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
                     },
                     None => -1
                 };
-                
                 if which >= 0 {
                     let which = which as usize;
-                    // Terminate, currently, makes the stop signal to true.
+                    // Terminate, makes the stop signal to true
                     chan_of_each[which].1.stop_signal = true;
+                    // Sender sends true to the target thread
                     chan_of_each[which].0.send(true).unwrap();
                 }
             },
@@ -151,8 +149,6 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
                 // nop, drop to the next iteration
             }
         };
-        
-
         about_fn();
         // Print the current running threads
         for frame in &chan_of_each {

@@ -38,11 +38,9 @@ fn main() {
                         .subcommand(SubCommand::with_name("list")
                                     .about("List the existed models"))
                         .get_matches();
-    
     // Level of concurrency
     let concurrency = matches.value_of("concurrency").unwrap_or("1");
     let concurrency: u32 = FromStr::from_str(concurrency).unwrap();
- 
     // Lists the existed models
     if let Some(_) = matches.subcommand_matches("list") {
         println!("single_road_model");
@@ -50,10 +48,8 @@ fn main() {
     }
     // Model file, defualt is the single_road_model
     let model_file = matches.value_of("model").unwrap_or("model/single_road_model.toml"); 
-    
     // Parse the configuration file
     let conf = carcar::config::parse_toml(model_file);
-    
     // Checkout whether the logger is opened.
     let logger = match matches.occurrences_of("log") {
         0 => {
@@ -63,7 +59,6 @@ fn main() {
             true
         }
     };
-
     // If the debug mode is specified, spawn the fake server for testing
     match matches.occurrences_of("debug") {
         0 => {
