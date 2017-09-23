@@ -39,10 +39,10 @@ struct ThreadFrame {
 
 /// Generate new thread frame
 impl ThreadFrame {
-    fn new(id: u32, destination: String, stop_signal: bool) -> ThreadFrame {
+    fn new(id: u32, destination: &str, stop_signal: bool) -> ThreadFrame {
         ThreadFrame {
             id: id,
-            destination: destination,
+            destination: destination.to_owned(),
             stop_signal: stop_signal
         }
     }
@@ -71,7 +71,7 @@ fn fire<T: Bencher>(receiver: Receiver<ThreadFrame>, c: ::config::Config, tf: Th
 
 /// Run parallel of each tcp stream connections.
 /// Each stream will continously sending data to the destination.
-fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
+fn bench_parallel(num_of_threads: u32, c: &::config::Config, dst: &str) {
     // The vector for recording spawning thread and associated join handlers
     let mut forks = vec![];
     let mut chan_of_each = vec![];
@@ -82,8 +82,8 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
     for num in 0..num_of_threads {
         let (sender, receiver) = channel();
         // Create a new thread frame for the thread.
-        let mut send_tf = ThreadFrame::new(num, c.destination.ip.to_owned() + ":" + &c.destination.port, false);
-        let mut recv_tf = send_tf.clone();
+        let send_tf = ThreadFrame::new(num, dst, false);
+        let recv_tf = send_tf.clone();
         let clone_c = c.clone();
         forks.push(thread::spawn(move || {
             fire::<::car::CarPayload>(receiver, clone_c, recv_tf);
@@ -160,7 +160,7 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config) {
 }
 
 /// Entry point of benchmark module
-pub fn bench(num_of_threads: u32, c: &::config::Config) {
-    println!("Start sending traffic data into {}", c.destination.ip.to_owned() + ":" + &c.destination.port);
-    bench_parallel(num_of_threads, c);
+pub fn bench(num_of_threads: u32, c: &::config::Config, dst: &str) {
+    println!("Start sending traffic data into {}", dst);
+    bench_parallel(num_of_threads, c, dst);
 }

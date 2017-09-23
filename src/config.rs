@@ -16,14 +16,7 @@ fn open_config(file_name: &str, mut contents: &mut String) {
 
 #[derive(Deserialize, Clone)]
 pub struct Config {
-    pub destination: Destination,
     pub car: CarConfig,
-}
-
-#[derive(Deserialize, Clone)]
-pub struct Destination {
-    pub ip: String,
-    pub port: String,
 }
 
 #[derive(Deserialize, Clone)]
@@ -56,8 +49,6 @@ mod test_config {
         use super::*;
         let file_name = String::from("test/test_config.toml");
         let config = parse_toml(&file_name[..]);
-        assert_eq!(config.destination.ip, "127.0.0.1");
-        assert_eq!(config.destination.port, "10023");
         assert_eq!(config.car.position[0], 0);
         assert_eq!(config.car.position[1], 4000);
         assert_eq!(config.car.position[2], 0);
