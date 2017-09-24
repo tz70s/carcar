@@ -5,8 +5,8 @@
 use std::net::{TcpListener, TcpStream};
 use std::io::Read;
 use std::thread;
-use std::time::{SystemTime};
-use std::sync::mpsc::{channel};
+use std::time::SystemTime;
+use std::sync::mpsc::channel;
 
 /// Handling client of each stream
 fn handle_client(stream: &mut TcpStream, logger: bool, keep_time: u64) -> i32 {

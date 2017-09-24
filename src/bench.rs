@@ -6,7 +6,7 @@
 use std::io::prelude::*;
 use std::net::TcpStream;
 use std::thread;
-use std::sync::mpsc::{Receiver, channel};
+use std::sync::mpsc::{channel, Receiver};
 use std::io::{self, BufRead};
 use std::process;
 
@@ -43,7 +43,7 @@ impl ThreadFrame {
         ThreadFrame {
             id: id,
             destination: destination.to_owned(),
-            stop_signal: stop_signal
+            stop_signal: stop_signal,
         }
     }
 }
@@ -51,6 +51,12 @@ impl ThreadFrame {
 /// Generate data payload along with different threads
 /// TODO: Connection retry
 fn fire<T: Bencher>(receiver: Receiver<ThreadFrame>, c: ::config::Config, tf: ThreadFrame) {
+    // TODO: try to reconect or abandon here.
+    // The connect_timeout is nightly-only experimental API, don't use here currently,
+    // just abandon this connection.
+    // But need to let the main thread checkout whether this stream is success or not,
+    // to decide change the target or debugging.
+    // TODO: add the connection status channel to communicate with outside.
     let mut stream = TcpStream::connect(tf.destination).unwrap();
     let mut bencher = T::generate();
     loop {
@@ -63,9 +69,8 @@ fn fire<T: Bencher>(receiver: Receiver<ThreadFrame>, c: ::config::Config, tf: Th
                     break;
                 }
                 stream = TcpStream::connect(ntf.destination).unwrap();
-            },
-            Err(_) => {} 
-            // Keep going
+            }
+            Err(_) => {} // Keep going
         }
     }
 }
@@ -111,10 +116,8 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config, dst: &str) {
             "migrate" => {
                 // To change the target destination
                 which = match command.next() {
-                    Some(s) => {
-                        s.parse::<i32>().expect("invalid digits")
-                    },
-                    None => -1
+                    Some(s) => s.parse::<i32>().expect("invalid digits"),
+                    None => -1,
                 };
                 if which >= 0 {
                     let which = which as usize;
@@ -122,31 +125,35 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config, dst: &str) {
                     match command.next() {
                         Some(s) => {
                             chan_of_each[which].1.destination = s.to_owned();
-                            chan_of_each[which].0.send(chan_of_each[which].1.clone()).expect("can't send the thread frame");
-                        },
+                            chan_of_each[which]
+                                .0
+                                .send(chan_of_each[which].1.clone())
+                                .expect("can't send the thread frame");
+                        }
                         None => {}
                     }
                 }
-            },
+            }
             "stop" => {
                 // Stop a thread
-                which = match command.next(){
-                    Some(s) => {
-                        s.parse::<i32>().expect("invalid digits")
-                    },
-                    None => -1
+                which = match command.next() {
+                    Some(s) => s.parse::<i32>().expect("invalid digits"),
+                    None => -1,
                 };
                 if which >= 0 {
                     let which = which as usize;
                     // Terminate, makes the stop signal to true
                     chan_of_each[which].1.stop_signal = true;
                     // Sender sends true to the target thread
-                    chan_of_each[which].0.send(chan_of_each[which].1.clone()).expect("can't send the thread frame");
+                    chan_of_each[which]
+                        .0
+                        .send(chan_of_each[which].1.clone())
+                        .expect("can't send the thread frame");
                 }
-            },
+            }
             "exit" => {
                 process::exit(0);
-            },
+            }
             _ => {
                 // nop, drop to the next iteration
             }
