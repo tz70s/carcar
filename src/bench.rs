@@ -98,8 +98,7 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config, dst: &str) {
     }
     println!("=====================================================================");
     // Use stdin for terminate the spawnning threads.
-    // TODO: makes the channel identified more verbose, not just an vector of integer.
-    // TODO: make the stdin into a new TCP socket, CAREFULLY dealing with error here!
+    // TODO: CAREFULLY dealing with error here!
     // TODO: what if spawning a new thread here?
     let stdin = io::stdin();
     loop {
