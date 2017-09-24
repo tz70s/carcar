@@ -49,6 +49,7 @@ impl ThreadFrame {
 }
 
 /// Generate data payload along with different threads
+/// TODO: Connection retry
 fn fire<T: Bencher>(receiver: Receiver<ThreadFrame>, c: ::config::Config, tf: ThreadFrame) {
     let mut stream = TcpStream::connect(tf.destination).unwrap();
     let mut bencher = T::generate();
@@ -142,6 +143,9 @@ fn bench_parallel(num_of_threads: u32, c: &::config::Config, dst: &str) {
                     // Sender sends true to the target thread
                     chan_of_each[which].0.send(chan_of_each[which].1.clone()).expect("can't send the thread frame");
                 }
+            },
+            "exit" => {
+                process::exit(0);
             },
             _ => {
                 // nop, drop to the next iteration
